@@ -1,4 +1,6 @@
 class Joueur():
+    """Classe de base des joueurs humains et ordinateurs
+    """
     def __init__(self, tableau, index):
         self.index = index
         self.tableau = tableau
@@ -6,6 +8,13 @@ class Joueur():
         self.cases = {}
     
     def jouer(self):
+        """Déroulement du jeu:
+        1 - Vérification victoire (via verifier_victoire) ou défaite (via self.tableau.en_cours)
+        2 - Le tableau est imprimé 
+        3 - Le joueur prend une décision
+        4 - La décision est exécutée
+        5 - L'étape 1 est reprise 
+        """
         
         if self.tableau.verifier_victoire():
                 print("Bravo! Tu as Réussi!")
@@ -16,19 +25,35 @@ class Joueur():
             
             
     def choisir_action(self):
+        """Précisée dans les sous-classes
+        """
         pass
 
          
         
     def executer_action(self, choix):
+        """Le choix passé en argument est exécuté sur les cases du tableau
+
+        Args:
+            choix (int, int, str): 3 objets en une variable:
+                                   x: position en x de la case à modifier
+                                   y: position en y de la case à modifier
+                                   action: tourner, flagger ou chorder (https://en.wikipedia.org/wiki/Chording)
+        """
+
         x,y,action = choix
         if action.lower() == "f":
             self.tableau.cases[(x,y)].flag_case()
         elif action.lower() == "t":
             self.tableau.cases[(x,y)].tourner_case()
+        elif action.lower() == "c":
+            self.tableau.cases[(x,y)].chord_case()
         else: print("erreur choix") 
         
 class JoueurHumain(Joueur):
+    """Classe du joueur humain, représente toutes les méthodes avec lesquelles un joueur humain peut faire un choix
+
+    """
     def __init__(self, tableau, index):
         super().__init__(tableau, index)
         
@@ -39,19 +64,30 @@ class JoueurHumain(Joueur):
         
         
     def choisir_action(self):
+        """le joueur est invité à entrer 3 valeurs dans la console pour modifier une case
+
+        Returns:
+            (int, int, str): 3 objets en une variable:
+                x: position en x de la case à modifier
+                y: position en y de la case à modifier
+                action: tourner, flagger ou chorder
+ 
+        """
         super().choisir_action()
         while True:
             case_x = int(input("Quel case voulez-vous tourner? position en x:"))
             case_y = int(input("Quel case voulez-vous tourner? position en y:"))
             if (case_x,case_y) in self.cases:
                 if not self.cases[(case_x,case_y)].tournee:
-                    action = input("Tourner un case 't' ou Flagger un case 'f'?")
-                    if action.lower() == "t" or action.lower() == "f":
+                    action = input("Tourner un case 't', Flagger un case 'f', Chorder une case avec 'c'?")
+                    if action.lower() == "t" or action.lower() == "f" or action.lower() == "c":
                         return case_x, case_y, action
             else: print("Entrée invalide: (La case donnée n'est pas dans le tableau, ou est déjà tournée)")
                     
        
 class JoueurOrdinateur(Joueur):
+    """Classe d'un joueur ordinateur, algorithme de prise de décisions intelligentes
+    """
     def __init__(self, tableau, index):
         super().__init__(tableau, index)
         
@@ -71,12 +107,10 @@ class JoueurOrdinateur(Joueur):
             Groupe 2 - (non-tournées: a_tourner | oubliées):
              Sous-Groupe 2.1 - a_tourner (Toutes cases non-tournees, non-flag, qui touchent une case tournée, à prioriser pour tourner)
              Sous-Groupe 2.2 - cachées (Toutes cases non-tournées, non-flag, qui ne touchent aucune case tournée))
-             *Suivant cet ordre, toute case commence au bas, er les cases peuvent seulement se déplacer 
+             *Suivant cet ordre, toute case commence au bas, et les cases peuvent seulement se déplacer 
              du bas vers le haut.Tout déplacement bas - > haut est possible directement (ex. cachées - > information, a_tourner -> oubliées)
+           *L'ordre du classement ci-dessous ne peut pas être changé.
             """
-        
-        # L'ordre du classement ne peut pas être changé
-        
         obtenir_cases()
         classer_cases_tournees()
         classer_reste()
@@ -84,7 +118,7 @@ class JoueurOrdinateur(Joueur):
         
         def obtenir_cases(self):
             """Le Joueur obtient la valeur des cases tournées à partir du tableau. 
-            Les input du tableau sont ici pour le joueur (Sauf au __init__).
+            Les input du tableau sont seulement ici pour le joueur ordinateur, permet de s'assurer qu'il n'y a pas de trichage!
             """
             for case in self.tableau.cases:
                 if self.tableau.cases[case].tournee:
@@ -96,7 +130,7 @@ class JoueurOrdinateur(Joueur):
                     
                 
         def classer_cases_tournees(self):
-            "Déplace toutes les cases appropriées Groupe 2 -> Groupe 1. Toutes les cases déplacées se retrouvent dans sous-groupe 1.2"
+            "Déplace toutes les cases appropriées (tournées) Groupe 2 -> Groupe 1. Toutes les cases déplacées se retrouvent dans sous-groupe 1.2"
 
             for case in self.cases_cachees:
                 case_analysee = self.cases[case]
