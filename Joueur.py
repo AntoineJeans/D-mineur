@@ -19,7 +19,7 @@ class Joueur():
         if self.tableau.verifier_victoire():
                 print("Bravo! Tu as Réussi!")
         elif self.tableau.en_cours:
-            self.print_tableau()
+            self.tableau.print_tableau()
             self.executer_action(self.choisir_action())
             self.jouer()
             
@@ -60,7 +60,7 @@ class JoueurHumain(Joueur):
         self.cases_oubliees = []
         self.cases_information = []
         self.cases_a_tourner = []
-        self.cases_cachees = self.cases.keys()
+        self.cases_cachees = self.tableau.cases.keys()
         
         
     def choisir_action(self):
@@ -77,8 +77,8 @@ class JoueurHumain(Joueur):
         while True:
             case_x = int(input("Quel case voulez-vous tourner? position en x:"))
             case_y = int(input("Quel case voulez-vous tourner? position en y:"))
-            if (case_x,case_y) in self.cases:
-                if not self.cases[(case_x,case_y)].tournee:
+            if (case_x,case_y) in self.tableau.cases:
+                if not self.tableau.cases[(case_x,case_y)].tournee:
                     action = input("Tourner un case 't', Flagger un case 'f', Chorder une case avec 'c'?")
                     if action.lower() == "t" or action.lower() == "f" or action.lower() == "c":
                         return case_x, case_y, action

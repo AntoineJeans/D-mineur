@@ -1,6 +1,6 @@
 from tableau import Tableau
-from Joueur import Joueur
+from Joueur import JoueurHumain, JoueurOrdinateur
 
 partie = Tableau()
-joueur1 = Joueur(partie,1)
-joueur1.jouer(partie)
+joueur1 = JoueurHumain(partie,1)
+joueur1.jouer()
