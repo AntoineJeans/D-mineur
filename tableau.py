@@ -102,13 +102,63 @@ class Tableau():
     #    else: print("erreur choix") 
     
     # Vestiges de l'ancien système, tester avant de supprimer
+    
+    
+          
+    def executer_action(self, choix):
+        """Le choix passé en argument est exécuté sur les cases du tableau
+
+        Args:
+            choix (int, int, str): 3 objets en une variable:
+                                   x: position en x de la case à modifier
+                                   y: position en y de la case à modifier
+                                   action: tourner, flagger ou chorder (https://en.wikipedia.org/wiki/Chording)
+        """
+
+        x,y,action = choix
+        if action.lower() == "f":
+            self.cases[(x,y)].flag_case()
+        elif action.lower() == "t":
+            self.cases[(x,y)].tourner_case()
+        elif action.lower() == "c":
+            self.cases[(x,y)].chord_case()
+        else: print("erreur choix") 
+        
+            
+    def executer_premier_tour(self, choix):
+        """Généralement, au démineur, une bombe ne peut pas être trouvée au premier tour. Le premier tour doit donc être différent, sans affecter le hasard des bombes.
+        Si le premier choix touche une bombe, la bombe est déplacée à une case aléatoire, et les cases adjacentes sont recalculées.
+        """
+
+        x,y,action = choix
+        # S'il y a une bombe, on la déplace de façon aléatoire
+        if (x,y) in self.bombes:
+            self.bombes.pop((x,y))
+            self.cases[(x,y)] = CaseVide((x,y), self)
+            
+            while len(self.bombes) < self.nbr_bombes:
+                x_bombe = randint(1,self.dimension_x)
+                y_bombe = randint(1,self.dimension_y)
+                if (x_bombe,y_bombe) not in self.bombes:
+                    self.bombes.append((x,y))
+                    self.cases[(x_bombe,y_bombe)] = CaseBombe((x_bombe,y_bombe), self)
+                    
+                    case_a_modifier = self.cases[x_bombe,y_bombe].selectionner_cases_adjacentes()
+                    for case in case_a_modifier:
+                        self.cases[case].calculer_valeur()
+                    # Ne pas oublier cette partie! 
+
+        
+        self.executer_action(choix)
         
     
-    def print_tableau(self):
+    # L'exécution des choix se fait maintenant ici, c'est plus logique
+    
+    def print_tableau(self, tour):
         
         """Fonction qui imprime le tableau dans la console (éventuellement remplacé par une interface potentiellement)
         """
-        
+        print("Vous avez fait", tour, "actions.")
                
         ligne = "   ||"
         for x_adresse in range(1, self.dimension_x+1):

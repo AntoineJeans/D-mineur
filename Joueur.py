@@ -1,3 +1,6 @@
+from cases import CaseBombe, CaseVide
+from random import randint
+
 class Joueur():
     """Classe de base des joueurs humains et ordinateurs
     """
@@ -7,7 +10,7 @@ class Joueur():
         self.elimine = False
         self.cases = {}
     
-    def jouer(self):
+    def jouer(self, tour):
         """Déroulement du jeu:
         1 - Vérification victoire (via verifier_victoire) ou défaite (via self.tableau.en_cours)
         2 - Le tableau est imprimé 
@@ -19,9 +22,12 @@ class Joueur():
         if self.tableau.verifier_victoire():
                 print("Bravo! Tu as Réussi!")
         elif self.tableau.en_cours:
-            self.tableau.print_tableau()
-            self.executer_action(self.choisir_action())
-            self.jouer()
+            self.tableau.print_tableau(tour)
+            if tour == 1:
+                self.tableau.executer_premier_tour(self.choisir_action())
+            else:
+                self.tableau.executer_action(self.choisir_action())
+            self.jouer(tour+1)
             
             
     def choisir_action(self):
@@ -31,24 +37,44 @@ class Joueur():
 
          
         
-    def executer_action(self, choix):
-        """Le choix passé en argument est exécuté sur les cases du tableau
-
-        Args:
-            choix (int, int, str): 3 objets en une variable:
-                                   x: position en x de la case à modifier
-                                   y: position en y de la case à modifier
-                                   action: tourner, flagger ou chorder (https://en.wikipedia.org/wiki/Chording)
-        """
-
-        x,y,action = choix
-        if action.lower() == "f":
-            self.tableau.cases[(x,y)].flag_case()
-        elif action.lower() == "t":
-            self.tableau.cases[(x,y)].tourner_case()
-        elif action.lower() == "c":
-            self.tableau.cases[(x,y)].chord_case()
-        else: print("erreur choix") 
+    #def executer_action(self, choix):
+    #    """Le choix passé en argument est exécuté sur les cases du tableau
+#
+    #    Args:
+    #        choix (int, int, str): 3 objets en une variable:
+    #                               x: position en x de la case à modifier
+    #                               y: position en y de la case à modifier
+    #                               action: tourner, flagger ou chorder (https://en.wikipedia.org/wiki/Chording)
+    #    """
+#
+    #    x,y,action = choix
+    #    if action.lower() == "f":
+    #        self.tableau.cases[(x,y)].flag_case()
+    #    elif action.lower() == "t":
+    #        self.tableau.cases[(x,y)].tourner_case()
+    #    elif action.lower() == "c":
+    #        self.tableau.cases[(x,y)].chord_case()
+    #    else: print("erreur choix") 
+    #    
+    #        
+    #def executer_premier_tour(self, choix):
+    #    """Généralement, au démineur, une bombe ne peut pas être trouvée au premier tour. Le premier tour doit donc être différent, sans affecter le hasard des bombes.
+    #    """
+#
+    #    x,y,action = choix
+    #    # S'il y a une bombe, on la déplace de façon aléatoire
+    #    if (x,y) in self.tableau.bombes:
+    #        self.tableau.bombes.append((x,y))
+    #        self.tableau.cases[(x,y)] = CaseVide((x,y), self.tableau)
+    #        
+    #        while len(self.tableau.bombes) < self.tableau.nbr_bombes:
+    #            x_bombe = randint(1,self.tableau.dimension_x)
+    #            y_bombe = randint(1,self.tableau.dimension_y)
+    #            if (x_bombe,y_bombe) not in self.tableau.bombes:
+    #                self.tableau.bombes.append((x,y))
+    #                self.tableau.cases[(x_bombe,y_bombe)] = CaseBombe((x_bombe,y_bombe), self.tableau)
+    #    
+    #    self.executer_action(choix)
         
 class JoueurHumain(Joueur):
     """Classe du joueur humain, représente toutes les méthodes avec lesquelles un joueur humain peut faire un choix
@@ -92,12 +118,15 @@ class JoueurOrdinateur(Joueur):
         super().__init__(tableau, index)
         
     def choisir_action(self):
+        """Algorithme complet de prise de décision de l'ordinateur.
+        """
         super().choisir_action()
         self.classer_cases()
         if not self.tourner_simple():
             if not self.flag_simple():
                 self.lancer_simulation()
-        
+                
+     
     
     def classer_cases(self):
         """Classe les cases dans leurs sous-groupes respectifs: 
