@@ -11,23 +11,15 @@ class Joueur():
         self.cases = {}
     
     def jouer(self, tour):
-        """Déroulement du jeu:
-        1 - Vérification victoire (via verifier_victoire) ou défaite (via self.tableau.en_cours)
-        2 - Le tableau est imprimé 
-        3 - Le joueur prend une décision
-        4 - La décision est exécutée
-        5 - L'étape 1 est reprise 
+        """Initialise un tour pour toute classe de joueur
+
+        Args:
+            tour (int): indique le nombre de fois où jouer s'est fait appeler récursivement.
         """
-        
-        if self.tableau.verifier_victoire():
-                print("Bravo! Tu as Réussi!")
-        elif self.tableau.en_cours:
+      
+        self.tableau.verifier_victoire()
+        if self.tableau.en_cours:
             self.tableau.print_tableau(tour)
-            if tour == 1:
-                self.tableau.executer_premier_tour(self.choisir_action())
-            else:
-                self.tableau.executer_action(self.choisir_action())
-            self.jouer(tour+1)
             
             
     def choisir_action(self):
@@ -82,11 +74,28 @@ class JoueurHumain(Joueur):
     """
     def __init__(self, tableau, index):
         super().__init__(tableau, index)
+    
+    
+    def jouer(self, tour):
+        """Déroulement du jeu pour l'humain:
+        1 - Vérification victoire (via verifier_victoire) ou défaite (via self.tableau.en_cours) - hérité
+        2 - Le tableau est imprimé - hérité
+        3 - Le joueur prend une décision
+        4 - La décision est exécutée
+        5 - L'étape 1 est reprise 
+        """
+        super().jouer(tour)
+                    
+        if self.tableau.en_cours:
+            if tour == 1:
+                self.tableau.executer_premier_tour(self.choisir_action())
+            else:
+                self.tableau.executer_action(self.choisir_action())
+            self.jouer(tour+1)
+
+
         
-        self.cases_oubliees = []
-        self.cases_information = []
-        self.cases_a_tourner = []
-        self.cases_cachees = self.tableau.cases.keys()
+
         
         
     def choisir_action(self):
@@ -116,6 +125,10 @@ class JoueurOrdinateur(Joueur):
     """
     def __init__(self, tableau, index):
         super().__init__(tableau, index)
+        self.cases_oubliees = []
+        self.cases_information = []
+        self.cases_a_tourner = []
+        self.cases_cachees = self.tableau.cases.keys()
         
     def choisir_action(self):
         """Algorithme complet de prise de décision de l'ordinateur.
@@ -126,8 +139,16 @@ class JoueurOrdinateur(Joueur):
             if not self.flag_simple():
                 self.lancer_simulation()
                 
-     
-    
+    def jouer(self, tour):
+        super().jouer(tour)
+        
+        if self.tableau.en_cours:        
+            self.classer_cases()
+            self.decisions_simple()
+            if self.tableau.en_cours:
+                self.decision_complexe()
+
+           
     def classer_cases(self):
         """Classe les cases dans leurs sous-groupes respectifs: 
             Groupe 1 - (Tournées ou flag: oubliées | information) : 
@@ -143,6 +164,8 @@ class JoueurOrdinateur(Joueur):
         obtenir_cases()
         classer_cases_tournees()
         classer_reste()
+    
+    
         
         
         def obtenir_cases(self):
@@ -200,15 +223,106 @@ class JoueurOrdinateur(Joueur):
                 if a_transferer:
                     self.cases_information.pop(case_analysee)
                     self.cases_oubliees.append(case_analysee)
-              
-    def tourner_simple(self):
+                    
+         
+    def decisions_simple(self):
+        """La majorité des décisions "simples" devraient se faire ici. 
+        Simple: Décision qui ne nécéssitent pas de prendre en compte plusieurs cases information pour modifier une case a modifier
+        ex1: Une case 2 touche déjà 2 drapeaux, on tourne alors toute case adjacentes au 2, sauf les cases flaggées.
+        ex2: Une case 1 touche seulement une case non tournée. On met donc un drapeau sur cette case.
+        mauvais exemple: pattern 1-2-1 est par dessus 3 cases non-tournées en parralèle, les 3 cases ne touchent aucune autre case non-tournées. 
+        La seule possibilité est que les cases sous 1-2-1 soient respectivement Bombe-Vide-Bombe.
+        
+        """
+        # Cette étape est généralement inutile, mais pas tout le temps 
+        self.analyse_integrale_chord()
+        
+        # Étape plus importante, elle fonctionne en plusieurs vagues de type 1-flag 2-chord cases adjacentes au flag.
+        self.analyse_integrale_flag()
+        
+    def decision_complexe(self):
+        """Cette méthode est appelée quand l'ordinateur ne trouve plus de modification simple à apporter au tableau. Sans aucun doute la partie la plus complexe du jeu.
+        """
         pass
+
+                    
+    def analyse_integrale_chord(self):
+        """Toutes les cases "information" sont chordées en boucle jusqu'à ce qu'une boucle tourne aucune case.
+        """
+        boucle_chord_utile = True
+        while boucle_chord_utile:
+            boucle_chord_utile = False
+            for case in self.cases_information:
+                case_tournee = self.tableau.cases[case].chord_case()
+                if case_tournee:
+                    boucle_chord_utile = True
+            if boucle_chord_utile:
+                self.classer_cases()
+                    
+    def analyse_integrale_flag(self):
+        """Toutes les cases "information" sont flaggées selon l'algorithme verifier_flag_simple(case), en boucle,
+        jusqu'à ce qu'une boucle ne flag aucune case. Une boucle est plus efficace, puisque l'algorithme de flagging 
+        intelligent chorde les cases adjacentes, ouvrant de nouvelles opportunités de flagging.
+        """
+        boucle_flag_utile = True
+        while boucle_flag_utile:
+            boucle_flag_utile = False
+            for case in self.cases_information:
+                case_flaggée = self.verifier_flag_simple(case)
+                if case_flaggée:
+                    boucle_flag_utile = True
+            if boucle_flag_utile:
+                self.classer_cases()
+        
+
     
-    def flag_simple(self):
-        pass
+    def tourner_case(self,position):
+        """Tourne simplement la case selectionnée
+
+        Args:
+            position (tuple): forme (xmy)
+        """
+        self.tableau.cases[position].tourner_case()
+            
+        
+
+    def verifier_flag_simple(self, position):
+        """La fonction vérifie si la case "information" en argument touche le même nombre de cases non-tournées que sa valeur, si c'est le case, flag_intellgient_case est appelé
+        Args:
+            position (tuple): position de la case en forme (x,y) de la position de la case à tourner. 
+        """
+        compte = 0
+        cases_adjacentes = self.tableau.cases[position].selectionner_cases_adjacentes()
+        for case in cases_adjacentes:
+            if not self.tableau.cases[case].tournee:
+                compte += 1
+        if compte == self.tableau.cases[position].valeur:
+            self.flag_intelligent_case(position)
+            return True
+        return False
+            
+        
     
-    def lancer_simulation(self):
-        pass
+    def flag_intelligent_case(self, position):
+        """Fonction utliisée quand une case doit être flag, on modifie la valeur flag de la case dans le tableau, 
+        et on chord automatiquement toute cases tournée adjacentes à la case flaggée.
+
+        Args:
+            position (tuple): position de la case en forme (x,y)
+        """
+        
+        self.tableau.cases[position].flag_case()
+        cases_adjacentes = self.tableau.cases[position].selectionner_cases_adjacentes()
+        
+        # On passe 2 fois, si chorder un case asjacentes tourne une case adjacente déjà passée, non-chordée, on a une perte d'efficacité. 
+        loop_a_faire = True
+        while loop_a_faire:
+            loop_a_faire = False
+            for case in cases_adjacentes:
+                if self.tableau.cases[case].tournee:
+                    if self.tableau.cases[case].chord_case():
+                        loop_a_faire = True
+
         
    
          

@@ -18,7 +18,9 @@ class Case():
     def chord_case(self):
         """Si la case est tournée, on vérifie si la valeur de cette case est égale au nombre de case adjacentes à celle-ci qui sont flag. 
         Si c'est le cas, toutes les cases adjacentes non-flag sont tournées, même s'il y a une bombe. (Si les conditions ne sont pas remplies, rien se passe)
+        Il est possible d'obtenir un output si le chord était utile (surtout pour l'ordinateur)
         """
+        case_tournee = False
         if self.tournee:
             cases_adjacentes = self.selectionner_case_adjacentes()
             nombre_flags_adjacents = self.compter_flags_adjacents()
@@ -26,6 +28,9 @@ class Case():
                 for case in cases_adjacentes:
                     if not self.tableau.cases[case].flag:
                         self.tableau.cases[case].tourner_case()
+                        case_tournee = True
+        return case_tournee
+                        
                     
     def selectionner_case_adjacentes(self):
         """permet d'obtenir une liste de positions des cases adjacentes (diagonales incluses).

@@ -211,20 +211,28 @@ class Tableau():
         Returns:
             bool: True si toutes les cases vides sont tournées, False sinon.
         """
-        nbr_cases_non_tournees = 0
-        for case in self.cases.values():
-            if not case.tournee: 
-                nbr_cases_non_tournees += 1
-        
-        if nbr_cases_non_tournees == len(self.bombes):
-            return True
-        return False
+        if self.en_cours:
+            nbr_cases_non_tournees = 0
+            for case in self.cases.values():
+                if not case.tournee: 
+                    nbr_cases_non_tournees += 1
+
+            if nbr_cases_non_tournees == len(self.bombes):
+                self.terminer_partie(True)
+            return False
+        else: self.terminer_partie(False) 
                            
-    def terminer_partie(self):
-        """Termine la partie
+    def terminer_partie(self, reussite):
+        """Fonction appelée en cas de réussite ou d'échec. Elle annonce le résultat et change le statut de la partie.
+
+        Args:
+            reussite (bool): True si réussite, False si échec
         """
-        print("Échec")
-        self.print_tableau_triche()
+        if reussite:
+            print("Bravo! Vous avez trouvé toutes les mines!")
+        else:
+            print("Échec :(")
+            self.print_tableau_triche()
         self.en_cours = False
         
         
