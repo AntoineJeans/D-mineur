@@ -130,14 +130,6 @@ class JoueurOrdinateur(Joueur):
         self.cases_a_tourner = []
         self.cases_cachees = self.tableau.cases.keys()
         
-    def choisir_action(self):
-        """Algorithme complet de prise de décision de l'ordinateur.
-        """
-        super().choisir_action()
-        self.classer_cases()
-        if not self.tourner_simple():
-            if not self.flag_simple():
-                self.lancer_simulation()
                 
     def jouer(self, tour):
         super().jouer(tour)
@@ -243,7 +235,29 @@ class JoueurOrdinateur(Joueur):
     def decision_complexe(self):
         """Cette méthode est appelée quand l'ordinateur ne trouve plus de modification simple à apporter au tableau. Sans aucun doute la partie la plus complexe du jeu.
         """
-        pass
+        
+        self.creer_groupe_superposés(self)
+    
+    
+    def creer_groupe_superposés(self):
+        liste_groupes = []
+        for case_tournee in self.cases_information:
+            compte = 0
+            valeur = self.tableau.cases[case_tournee].valeur
+            groupe_case = []
+            cases_adjacentes = self.tableau.cases[case_tournee].selectionner_cases_adjacentes()
+            for case in cases_adjacentes:
+                if self.tableau.cases[case].flag: 
+                    valeur = valeur - 1
+                elif self.tableau.cases[case].tournee:
+                    groupe_case.append(case)
+            liste_groupes.append((valeur), groupe_case)
+                    
+        self.groupe_superposes = liste_groupes
+        
+    
+    
+    
 
                     
     def analyse_integrale_chord(self):
