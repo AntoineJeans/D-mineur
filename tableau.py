@@ -125,34 +125,47 @@ class Tableau():
         else: print("erreur choix") 
         
             
-    def executer_premier_tour(self, choix):
+    def executer_premier_tour(self, choix, rayon=0):
         """Généralement, au démineur, une bombe ne peut pas être trouvée au premier tour. Le premier tour doit donc être différent, sans affecter le hasard des bombes.
         Si le premier choix touche une bombe, la bombe est déplacée à une case aléatoire, et les cases adjacentes sont recalculées.
-        """
+        Le rayon représente le nombre de cases à "vider". Un rayon de 0 s'assure que seulement la case touchée ne contient pas de bombe, un rayon de 1 s'assure que le carré
+        3x3 autour de la case touchée ne contient pas de bombe (autrement dit, la première case touchée est un 0). Plus le rayon est haut, plus le départ est facile.
 
+
+        Args:
+            choix (tuple): voir executer_action
+            rayon (int): Le nombre de couches autour de la case touchée à vider.
+            """
+            
         x,y,action = choix
         # S'il y a une bombe, on la déplace de façon aléatoire
-        if (x,y) in self.bombes:
-            self.bombes.pop((x,y))
-            self.cases[(x,y)] = CaseVide((x,y), self)
+        cases_a_vider = self.cases[(x,y)].selectionner_cases_adjacentes(rayon)
+        case_a_modifier = []
+        
+        for case in case_a_vider:
             
-            while len(self.bombes) < self.nbr_bombes:
-                x_bombe = randint(1,self.dimension_x)
-                y_bombe = randint(1,self.dimension_y)
-                if (x_bombe,y_bombe) not in self.bombes:
-                    self.bombes.append((x,y))
-                    self.cases[(x_bombe,y_bombe)] = CaseBombe((x_bombe,y_bombe), self)
-                    
-                    case_a_modifier = self.cases[x_bombe,y_bombe].selectionner_cases_adjacentes()
-                    for case in case_a_modifier:
-                        self.cases[case].calculer_valeur()
-                    # Ne pas oublier cette partie! 
+            if case in self.bombes:
+                self.bombes.pop(case)
+                del self.cases[case]
+                self.cases[case] = CaseVide(case, self)
 
+                while len(self.bombes) < self.nbr_bombes:
+                    x_bombe = randint(1,self.dimension_x)
+                    y_bombe = randint(1,self.dimension_y)
+                    if (x_bombe,y_bombe) not in self.bombes:
+                        if (x_bombe,y_bombe) not in cases_a_vider: 
+                        self.bombes.append((x_bombe, y_bombe))
+                        del self.cases[(x_bombe,y_bombe)]
+                        self.cases[(x_bombe,y_bombe)] = CaseBombe((x_bombe,y_bombe), self)
+
+                        case_a_modifier += self.cases[x_bombe,y_bombe].selectionner_cases_adjacentes()
         
+        for case in case_a_modifier:
+            self.cases[case].calculer_valeur()
+        # Ne pas oublier cette parti
         self.executer_action(choix)
-        
-    
-    # L'exécution des choix se fait maintenant ici, c'est plus logique
+
+
     
     def print_tableau(self, tour):
         

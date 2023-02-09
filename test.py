@@ -1,3 +1,6 @@
-a = {1:2,3:4,5:6}
+a = list(range(2)) + [2]
+b = [5,6,7]
 
-print(1 in a)
+b  += a
+
+print (b)

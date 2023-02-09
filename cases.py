@@ -31,20 +31,61 @@ class Case():
                         case_tournee = True
         return case_tournee
                         
-                    
-    def selectionner_case_adjacentes(self):
-        """permet d'obtenir une liste de positions des cases adjacentes (diagonales incluses).
+    
+    def obtenir_combinaison(liste_valeurs, longueur,liste):
 
+        """
+        (fonction que j'ai fait il y a longtemps) Prépare une liste dont tous les élément représentent une combinaison de 
+        valeurs d'une longueur déterminée. Attaque le problème couche par couche, recursivement. 
+
+        Args:
+            listes_valeurs (list): Listes des valeurs possibles dans les éléments de la liste retournée
+            hauteur_actuelle (int): Permet de se situer dans la fonction recursive (doit être posée à 0 à l'appel)
+            degre (int): Indique la longueur des éléments de la liste retournées
+            liste (list): Liste de format [] dans laquelle tous les  éléments seront déposés
+
+        Returns:
+            liste: La liste de toutes les combinaisons de la liste_valeurs
+        """
+
+        quantite_combinaisons = int(len(liste_valeurs)**longueur)
+        quantite_addition_chaque_valeur = int(quantite_combinaisons/len(liste_valeurs))
+
+        if liste == []:
+            for i in range(quantite_combinaisons):
+                liste.append([])
+
+        if longueur != 0:
+            for case in range(len(liste)):
+                liste[case].append(liste_valeurs[(case//quantite_addition_chaque_valeur) % len(liste_valeurs)])
+
+            obtenir_combinaison(liste_valeurs, longueur - 1, liste)
+
+        return liste  
+
+
+    def selectionner_case_adjacentes(self, rayon=1):
+        """permet d'obtenir une liste de positions des cases adjacentes (diagonales incluses), 
+        incluse dans le carré centré sur la position de la case courante, au rayon détérminé. 
+        Appeler cette méthode avec rayon 0 serait un peu stupide. Le rayon == 1 est fréquent on retourne simplement une liste préconcue.
+        La longueur de la liste = (2rayon + 1)^2, donc si le rayon est plus grand que 2 on calcule par algorithme.
+        Args:
+            rayon (int): Le nombre de couches à sélectionner, la sélection finale sera un carré centré autour de la case touchée.
+            
         Returns:
             list: liste de positions sous la forme de tuples (x,y). Selon la position de la case, cette liste aura 3, 5 ou 8 elements.
 
         """
-
-        operations_tuiles_adjacentes = \
-            [(-1,-1),(-1,0),(0,-1),(0,1),(1,0),(1,1),(1,-1),(-1,1)]
+        if rayon == 0:
+            return self.position
+        elif rayon == 1: 
+            return [(-1,-1),(-1,0),(0,-1),(0,1),(1,0),(1,1),(1,-1),(-1,1)]
+        else:       
+            valeurs_operation = list[range(0,rayon)] + [rayon]           
+            operations_tuiles_adjacentes = self.obtenir_combinaisons(valeurs_operation, 2, [])
+            
         cases_adjacentes = []
-        compte_flag = 0
-        
+           
         for operation in operations_tuiles_adjacentes:
                 x = operation[0] + self.position[0]
                 y = operation[1] + self.position[1]

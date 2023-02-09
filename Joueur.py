@@ -133,14 +133,21 @@ class JoueurOrdinateur(Joueur):
                 
     def jouer(self, tour):
         super().jouer(tour)
+        if tour == 1:
+            self.jouer_premier_tour()
         
         if self.tableau.en_cours:        
             self.classer_cases()
             self.decisions_simple()
             if self.tableau.en_cours:
                 self.decision_complexe()
+        self.joueur(self, tour + 1)
 
-           
+    
+    def jouer_premier_tour(self):
+        case_random = randint(0, len(self.cases_cachees))
+        self.tableau.cases[case_random].tourner_case
+    
     def classer_cases(self):
         """Classe les cases dans leurs sous-groupes respectifs: 
             Groupe 1 - (Tournées ou flag: oubliées | information) : 
@@ -236,10 +243,15 @@ class JoueurOrdinateur(Joueur):
         """Cette méthode est appelée quand l'ordinateur ne trouve plus de modification simple à apporter au tableau. Sans aucun doute la partie la plus complexe du jeu.
         """
         
-        self.creer_groupe_superposés(self)
+        self.creer_groupes_superposes()
+        modification_apportee = self.comparer_groupes_superposes()
+        if not modification_apportee:
+            self.simplifier_groupes_superposes()
+            nouvelle_modification_apportee = self.comparer_groupes_superposes()
+            if not modification_apportee:
+                self.deviner_une_case()
     
-    
-    def creer_groupe_superposés(self):
+    def creer_groupes_superposes(self):
         liste_groupes = []
         for case_tournee in self.cases_information:
             compte = 0
@@ -255,11 +267,20 @@ class JoueurOrdinateur(Joueur):
                     
         self.groupe_superposes = liste_groupes
         
-    
-    
-    
+    def comparer_groupes_superposes(self):
+        pass
 
-                    
+    
+    def simplifier_groupes_superposes(self):
+        pass
+    
+    def deviner_une_case(self):
+        for case in self.cases_cachees:
+            index_case_random = randint(0, len(self.cases_cachees))
+            case_random_a_tourner = self.cases_cachees
+            self.tableau.cases[case_random_a_tourner].tourner_case()
+    
+                   
     def analyse_integrale_chord(self):
         """Toutes les cases "information" sont chordées en boucle jusqu'à ce qu'une boucle tourne aucune case.
         """
